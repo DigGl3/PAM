@@ -1,53 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+import 'colors.dart';
+import 'home_screen.dart';
 
 void main() {
-  runApp(MaterialApp(
-    home: Scaffold(
-      appBar: AppBar(title: Text('Calculator combustibil')),
-      body: FuelCalculator(),
+  WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
     ),
-  ));
+  );
+  runApp(const LearningApp());
 }
 
-class FuelCalculator extends StatefulWidget {
-  @override
-  State<FuelCalculator> createState() => _FuelCalculatorState();
-}
-
-class _FuelCalculatorState extends State<FuelCalculator> {
-  final distance = TextEditingController();
-  final fuel = TextEditingController();
-  String result = '';
-
-  void calculate() {
-    double d = double.parse(distance.text);
-    double f = double.parse(fuel.text);
-
-    setState(() {
-      result = 'Consum: ${(f / d * 100).toStringAsFixed(2)} L/100 km';
-    });
-  }
+class LearningApp extends StatelessWidget {
+  const LearningApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        TextField(
-          controller: distance,
-          decoration: InputDecoration(labelText: 'Distanta (km)'),
-          keyboardType: TextInputType.number,
-        ),
-        TextField(
-          controller: fuel,
-          decoration: InputDecoration(labelText: 'Combustibil (litri)'),
-          keyboardType: TextInputType.number,
-        ),
-        ElevatedButton(
-          onPressed: calculate,
-          child: Text('Calculeaza'),
-        ),
-        Text(result),
-      ],
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'Learning',
+      theme: ThemeData(
+        scaffoldBackgroundColor: Colors.white,
+        colorScheme: ColorScheme.fromSeed(seedColor: learningBlue),
+        splashFactory: InkRipple.splashFactory,
+      ),
+      home: const HomeScreen(),
     );
   }
 }

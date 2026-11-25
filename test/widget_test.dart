@@ -1,30 +1,22 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
+// Testul verifică faptul că ecranul Home afișează datele citite din
+// assets/data/lab_v4.json prin AppController (GetX).
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:get/get.dart';
 
 import 'package:lab111/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  tearDown(Get.reset);
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
+  testWidgets('Home is the opening screen with data from JSON', (tester) async {
+    await tester.pumpWidget(const LearningApp());
+    // Așteaptă încărcarea JSON-ului din assets
+    await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 200)));
     await tester.pump();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.text('Hi, Kristin'), findsOneWidget);
+    expect(find.text('Learning Plan'), findsOneWidget);
+    expect(find.text('Packaging Design'), findsOneWidget);
   });
 }

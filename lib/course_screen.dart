@@ -1,28 +1,34 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'controllers/app_controller.dart';
 import 'home_screen.dart';
+import 'widgets/data_view.dart';
+import 'widgets/net_image.dart';
 
-class CourseScreen extends StatefulWidget {
+class CourseScreen extends StatelessWidget {
   const CourseScreen({super.key});
 
-  @override
-  State<CourseScreen> createState() => _CourseScreenState();
-}
-
-class _CourseScreenState extends State<CourseScreen> {
-  int _tab = 0;
-
-  static const _lessons = [
-    ('Introduction to React', '04:28 min', true),
-    ('Understanding React', '06:12 min', false),
-    ('Create first React project', '43:58 min', false),
-    ('Build React', '26:18 min', false),
-  ];
+  static const _lessonTop = 460.0;
+  static const _lessonSpacing = 70.0;
 
   @override
   Widget build(BuildContext context) {
+    return DataView(
+      background: const Color(0xFFF9FBFF),
+      builder: (c) => _buildContent(context, c),
+    );
+  }
+
+  Widget _buildContent(BuildContext context, AppController c) {
+    final page = c.courseOverview;
+    final course = page.course;
+    final lessons = course.lessons;
+    final selectedTab = c.selectedTab.value;
+    // Prima lecție deblocată și neterminată este evidențiată (buton plin)
+    final current = lessons.indexWhere((l) => !l.locked && !l.completed);
+    final extraLessons = lessons.length > 4 ? lessons.length - 4 : 0;
     final size = MediaQuery.sizeOf(context);
     final top = MediaQuery.paddingOf(context).top;
     final bottom = MediaQuery.paddingOf(context).bottom;
@@ -39,7 +45,7 @@ class _CourseScreenState extends State<CourseScreen> {
             children: [
               SingleChildScrollView(
                 child: SizedBox(
-                  height: 805 + top,
+                  height: 805 + extraLessons * _lessonSpacing + top,
                   child: Stack(
                     children: [
                       Positioned(
@@ -48,17 +54,14 @@ class _CourseScreenState extends State<CourseScreen> {
                         width: 40,
                         height: 40,
                         child: GestureDetector(
-                          onTap: () {
-                            Navigator.of(context).pushReplacement(
-                              MaterialPageRoute(
-                                builder: (_) => const HomeScreen(),
-                              ),
-                            );
-                          },
-                          child: SvgPicture.asset(
-                            'assets/images/back.svg',
-                            width: 40,
-                            height: 40,
+                          onTap: () => Get.off(() => const HomeScreen()),
+                          child: Padding(
+                            padding: const EdgeInsets.all(6),
+                            child: NetImage(
+                              page.backIconUrl,
+                              width: 28,
+                              height: 28,
+                            ),
                           ),
                         ),
                       ),
@@ -66,7 +69,7 @@ class _CourseScreenState extends State<CourseScreen> {
                         left: 42,
                         top: 12 + top,
                         child: Text(
-                          'Course Overview',
+                          page.navigationTitle,
                           style: GoogleFonts.inter(
                             color: const Color(0xFF2C2C2C),
                             fontSize: 18,
@@ -81,9 +84,35 @@ class _CourseScreenState extends State<CourseScreen> {
                         height: 207,
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(16),
-                          child: Image.asset(
-                            'assets/images/course_hero.png',
-                            fit: BoxFit.cover,
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              NetImage(course.heroImageUrl),
+                              if (course.heroLabel.isNotEmpty)
+                                Positioned(
+                                  left: 16,
+                                  top: 16,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xCCFFFFFF),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      course.heroLabel,
+                                      style: GoogleFonts.roboto(
+                                        color: const Color(0xFF2C2C2C),
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                        letterSpacing: 1,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
                           ),
                         ),
                       ),
@@ -104,10 +133,11 @@ class _CourseScreenState extends State<CourseScreen> {
                               ),
                             ],
                           ),
-                          child: const Icon(
-                            Icons.play_arrow_rounded,
-                            color: Color(0xFFFF7401),
-                            size: 32,
+                          alignment: Alignment.center,
+                          child: NetImage(
+                            course.heroPlayIconUrl,
+                            width: 32,
+                            height: 32,
                           ),
                         ),
                       ),
@@ -115,7 +145,7 @@ class _CourseScreenState extends State<CourseScreen> {
                         left: 36,
                         top: 328 + top,
                         child: Text(
-                          'React Front To back',
+                          course.title,
                           style: GoogleFonts.roboto(
                             color: const Color(0xFF2C2C2C),
                             fontSize: 20,
@@ -128,14 +158,14 @@ class _CourseScreenState extends State<CourseScreen> {
                         top: 364 + top,
                         child: Row(
                           children: [
-                            const Icon(
-                              Icons.access_time,
-                              size: 14,
-                              color: Color(0xFF8C8C8C),
+                            NetImage(
+                              page.uiIcons.durationIconUrl,
+                              width: 16,
+                              height: 16,
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              '6h 30min',
+                              course.duration,
                               style: GoogleFonts.roboto(
                                 color: const Color(0xFF8C8C8C),
                                 fontSize: 14,
@@ -151,8 +181,14 @@ class _CourseScreenState extends State<CourseScreen> {
                                 ),
                               ),
                             ),
+                            NetImage(
+                              page.uiIcons.lessonsIconUrl,
+                              width: 16,
+                              height: 16,
+                            ),
+                            const SizedBox(width: 4),
                             Text(
-                              '7 lessons',
+                              '${course.lessonCount} lessons',
                               style: GoogleFonts.roboto(
                                 color: const Color(0xFF8C8C8C),
                                 fontSize: 14,
@@ -174,14 +210,14 @@ class _CourseScreenState extends State<CourseScreen> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              SvgPicture.asset(
-                                'assets/images/star.svg',
+                              NetImage(
+                                page.uiIcons.ratingIconUrl,
                                 width: 16,
                                 height: 16,
                               ),
                               const SizedBox(width: 2),
                               Text(
-                                '4.9',
+                                course.rating.toStringAsFixed(1),
                                 style: GoogleFonts.roboto(
                                   color: const Color(0xFFFF7401),
                                   fontSize: 14,
@@ -199,32 +235,47 @@ class _CourseScreenState extends State<CourseScreen> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            _Tab(
-                              text: 'Lessons',
-                              selected: _tab == 0,
-                              onTap: () => setState(() => _tab = 0),
-                            ),
-                            const SizedBox(width: 36),
-                            _Tab(
-                              text: 'Description',
-                              selected: _tab == 1,
-                              onTap: () => setState(() => _tab = 1),
-                            ),
+                            for (var i = 0; i < course.tabs.length; i++) ...[
+                              if (i > 0) const SizedBox(width: 36),
+                              _Tab(
+                                text: course.tabs[i].label,
+                                selected: selectedTab == course.tabs[i].id,
+                                onTap: () => c.selectTab(course.tabs[i].id),
+                              ),
+                            ],
                           ],
                         ),
                       ),
-                      if (_tab == 0)
-                        for (var i = 0; i < _lessons.length; i++)
+                      if (selectedTab == 'lessons')
+                        for (var i = 0; i < lessons.length; i++)
                           Positioned(
                             left: 36,
                             right: 32,
-                            top: (const [460.0, 529.0, 599.0, 669.0])[i] + top,
+                            top: _lessonTop + i * _lessonSpacing + top,
                             child: _LessonRow(
-                              title: _lessons[i].$1,
-                              duration: _lessons[i].$2,
-                              filled: _lessons[i].$3,
+                              title: lessons[i].title,
+                              duration: '${lessons[i].duration} min',
+                              filled: i == current,
+                              locked: lessons[i].locked,
+                              playIconUrl: lessons[i].playIconUrl,
+                              arrowIconUrl: lessons[i].arrowIconUrl,
                             ),
                           ),
+                      if (selectedTab == 'description')
+                        Positioned(
+                          left: 36,
+                          right: 32,
+                          top: _lessonTop + top,
+                          child: Text(
+                            course.description.isEmpty
+                                ? 'No description available.'
+                                : course.description,
+                            style: GoogleFonts.roboto(
+                              color: const Color(0xFF8C8C8C),
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
                     ],
                   ),
                 ),
@@ -267,7 +318,7 @@ class _CourseScreenState extends State<CourseScreen> {
                         border: Border.all(color: const Color(0xFFF2F2F2)),
                       ),
                       child: Text(
-                        'Free',
+                        page.actions.priceLabel,
                         style: GoogleFonts.roboto(
                           color: const Color(0xFFFF7401),
                           fontSize: 16,
@@ -281,11 +332,13 @@ class _CourseScreenState extends State<CourseScreen> {
                         height: 48,
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFF7401),
+                          color: page.actions.enrollEnabled
+                              ? const Color(0xFFFF7401)
+                              : const Color(0xFFD2D2D2),
                           borderRadius: BorderRadius.circular(14),
                         ),
                         child: Text(
-                          'Enroll Now',
+                          page.actions.enrollLabel,
                           style: GoogleFonts.inter(
                             color: Colors.white,
                             fontSize: 16,
@@ -350,39 +403,35 @@ class _LessonRow extends StatelessWidget {
     required this.title,
     required this.duration,
     required this.filled,
+    required this.playIconUrl,
+    required this.arrowIconUrl,
+    this.locked = false,
   });
 
   final String title;
   final String duration;
   final bool filled;
+  final bool locked;
+  final String playIconUrl;
+  final String arrowIconUrl;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
+        // Iconița de play din JSON (portocaliu / portocaliu deschis dacă e
+        // blocată). Lecția curentă primește un fundal portocaliu deschis.
         Container(
-          width: 42,
-          height: 42,
+          width: 46,
+          height: 46,
+          alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: filled ? const Color(0xFFFF7401) : Colors.white,
+            color: filled ? const Color(0xFFFFEBDD) : Colors.transparent,
             shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: filled
-                    ? const Color(0x33FF7401)
-                    : const Color(0x1A000000),
-                blurRadius: 12,
-                offset: const Offset(0, 6),
-              ),
-            ],
           ),
-          child: Icon(
-            Icons.play_arrow_rounded,
-            color: filled ? Colors.white : const Color(0xFFFF7401),
-            size: 22,
-          ),
+          child: NetImage(playIconUrl, width: 44, height: 44),
         ),
-        const SizedBox(width: 24),
+        const SizedBox(width: 20),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -390,7 +439,9 @@ class _LessonRow extends StatelessWidget {
               Text(
                 title,
                 style: GoogleFonts.roboto(
-                  color: const Color(0xFF2C2C2C),
+                  color: locked
+                      ? const Color(0xFFAEAEAE)
+                      : const Color(0xFF2C2C2C),
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
                 ),
@@ -405,7 +456,7 @@ class _LessonRow extends StatelessWidget {
             ],
           ),
         ),
-        const Icon(Icons.chevron_right, color: Color(0xFFFF7401), size: 22),
+        NetImage(arrowIconUrl, width: 28, height: 28),
       ],
     );
   }

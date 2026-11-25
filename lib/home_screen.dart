@@ -1,21 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'course_screen.dart';
+import 'models/app_data.dart';
+import 'widgets/data_view.dart';
+import 'widgets/net_image.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
-  void _openCourse(BuildContext context) {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const CourseScreen()),
-    );
-  }
+  void _openCourse() => Get.off(() => const CourseScreen());
 
   @override
   Widget build(BuildContext context) {
+    return DataView(
+      background: Colors.white,
+      builder: (c) => _buildContent(context, c.home),
+    );
+  }
+
+  Widget _buildContent(BuildContext context, HomePageData home) {
     final top = MediaQuery.paddingOf(context).top;
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
@@ -38,7 +45,7 @@ class HomeScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Hi, Kristin',
+                              home.header.greeting,
                               style: GoogleFonts.poppins(
                                 color: Colors.white,
                                 fontSize: 24,
@@ -47,7 +54,7 @@ class HomeScreen extends StatelessWidget {
                               ),
                             ),
                             Text(
-                              'Let’s start learning',
+                              home.header.subtitle,
                               style: GoogleFonts.poppins(
                                 color: Colors.white,
                                 fontSize: 14,
@@ -57,10 +64,18 @@ class HomeScreen extends StatelessWidget {
                           ],
                         ),
                       ),
-                      SvgPicture.asset(
-                        'assets/images/avatar.svg',
-                        width: 36,
-                        height: 50,
+                      _Bell(
+                        iconUrl: home.header.notificationIconUrl,
+                        hasUnread: home.header.hasUnreadNotification,
+                      ),
+                      const SizedBox(width: 12),
+                      ClipOval(
+                        child: NetImage(
+                          home.header.avatarUrl,
+                          width: 44,
+                          height: 44,
+                          placeholderColor: const Color(0x33FFFFFF),
+                        ),
                       ),
                     ],
                   ),
@@ -74,7 +89,11 @@ class HomeScreen extends StatelessWidget {
                   children: [
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: _TodayCard(onCourses: () => _openCourse(context)),
+                      child: _TodayCard(
+                        data: home.learnedToday,
+                        actionLabel: home.myCourses.actionLabel,
+                        onCourses: _openCourse,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     SizedBox(
@@ -83,7 +102,10 @@ class HomeScreen extends StatelessWidget {
                         scrollDirection: Axis.horizontal,
                         padding: const EdgeInsets.only(left: 20),
                         children: [
-                          _LearnCard(onStart: () => _openCourse(context)),
+                          _LearnCard(
+                            data: home.learningPrompt,
+                            onStart: _openCourse,
+                          ),
                           const SizedBox(width: 12),
                           const _SecondCard(),
                         ],
@@ -93,7 +115,7 @@ class HomeScreen extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Text(
-                        'Learning Plan',
+                        home.learningPlan.title,
                         style: GoogleFonts.poppins(
                           color: const Color(0xFF1F1F39),
                           fontSize: 18,
@@ -102,14 +124,14 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20),
-                      child: _PlanCard(),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: _PlanCard(items: home.learningPlan.items),
                     ),
                     const SizedBox(height: 16),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20),
-                      child: _MeetupCard(),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: _MeetupCard(data: home.meetup),
                     ),
                     const SizedBox(height: 24),
                   ],
@@ -124,8 +146,14 @@ class HomeScreen extends StatelessWidget {
 }
 
 class _TodayCard extends StatelessWidget {
-  const _TodayCard({required this.onCourses});
+  const _TodayCard({
+    required this.data,
+    required this.actionLabel,
+    required this.onCourses,
+  });
 
+  final LearnedTodayData data;
+  final String actionLabel;
   final VoidCallback onCourses;
 
   @override
@@ -150,7 +178,7 @@ class _TodayCard extends StatelessWidget {
           Row(
             children: [
               Text(
-                'Learned today',
+                data.title,
                 style: GoogleFonts.poppins(
                   color: const Color(0xFF858597),
                   fontSize: 12,
@@ -160,7 +188,7 @@ class _TodayCard extends StatelessWidget {
               GestureDetector(
                 onTap: onCourses,
                 child: Text(
-                  'My courses',
+                  actionLabel,
                   style: GoogleFonts.poppins(
                     color: const Color(0xFF3D5CFF),
                     fontSize: 12,
@@ -174,7 +202,7 @@ class _TodayCard extends StatelessWidget {
             TextSpan(
               children: [
                 TextSpan(
-                  text: '46min',
+                  text: '${data.learnedMinutes}min',
                   style: GoogleFonts.poppins(
                     color: const Color(0xFF1F1F39),
                     fontSize: 20,
@@ -182,7 +210,7 @@ class _TodayCard extends StatelessWidget {
                   ),
                 ),
                 TextSpan(
-                  text: '  / 60min',
+                  text: '  / ${data.goalMinutes}min',
                   style: GoogleFonts.poppins(
                     color: const Color(0xFF858597),
                     fontSize: 10,
@@ -203,10 +231,10 @@ class _TodayCard extends StatelessWidget {
                     color: Color(0xFFF4F3FD),
                     child: SizedBox.expand(),
                   ),
-                  Align(
+                  FractionallySizedBox(
                     alignment: Alignment.centerLeft,
+                    widthFactor: data.progress.clamp(0.0, 1.0),
                     child: Container(
-                      width: 210,
                       height: 6,
                       decoration: const BoxDecoration(
                         gradient: LinearGradient(
@@ -226,8 +254,9 @@ class _TodayCard extends StatelessWidget {
 }
 
 class _LearnCard extends StatelessWidget {
-  const _LearnCard({required this.onStart});
+  const _LearnCard({required this.data, required this.onStart});
 
+  final LearningPromptData data;
   final VoidCallback onStart;
 
   @override
@@ -246,27 +275,23 @@ class _LearnCard extends StatelessWidget {
             Positioned(
               left: 18,
               top: 20,
-              right: 0,
+              right: 108,
               child: Text(
-                'What do youwant to learn today ?',
-                maxLines: 1,
-                softWrap: false,
-                overflow: TextOverflow.clip,
+                data.title,
+                maxLines: 3,
                 style: GoogleFonts.poppins(
                   color: const Color(0xFF1F1F39),
-                  fontSize: 16,
+                  fontSize: 15,
                   fontWeight: FontWeight.w700,
                 ),
               ),
             ),
             Positioned(
               right: 0,
+              top: 0,
               bottom: 0,
-              child: SvgPicture.asset(
-                'assets/images/learner.svg',
-                width: 119,
-                height: 134,
-              ),
+              width: 100,
+              child: NetImage(data.imageUrl),
             ),
             Positioned(
               left: 18,
@@ -282,7 +307,7 @@ class _LearnCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    'Get Started',
+                    data.actionLabel,
                     style: GoogleFonts.poppins(
                       color: Colors.white,
                       fontSize: 12,
@@ -333,7 +358,9 @@ class _SecondCard extends StatelessWidget {
 }
 
 class _PlanCard extends StatelessWidget {
-  const _PlanCard();
+  const _PlanCard({required this.items});
+
+  final List<LearningPlanItem> items;
 
   @override
   Widget build(BuildContext context) {
@@ -350,21 +377,17 @@ class _PlanCard extends StatelessWidget {
           ),
         ],
       ),
-      child: const Column(
+      child: Column(
         children: [
-          _PlanRow(
-            icon: 'assets/images/progress_a.svg',
-            title: 'Packaging Design',
-            done: '40',
-            total: '/48',
-          ),
-          SizedBox(height: 17),
-          _PlanRow(
-            icon: 'assets/images/progress_b.svg',
-            title: 'Product Design',
-            done: '6',
-            total: '/24',
-          ),
+          for (var i = 0; i < items.length; i++) ...[
+            if (i > 0) const SizedBox(height: 17),
+            _PlanRow(
+              icon: items[i].progressIconUrl,
+              title: items[i].title,
+              done: '${items[i].completed}',
+              total: '/${items[i].total}',
+            ),
+          ],
         ],
       ),
     );
@@ -388,7 +411,7 @@ class _PlanRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        SvgPicture.asset(icon, width: 18, height: 18),
+        NetImage(icon, width: 18, height: 18),
         const SizedBox(width: 13),
         Expanded(
           child: Text(
@@ -426,7 +449,9 @@ class _PlanRow extends StatelessWidget {
 }
 
 class _MeetupCard extends StatelessWidget {
-  const _MeetupCard();
+  const _MeetupCard({required this.data});
+
+  final MeetupData data;
 
   @override
   Widget build(BuildContext context) {
@@ -443,7 +468,7 @@ class _MeetupCard extends StatelessWidget {
             left: 21,
             top: 27,
             child: Text(
-              'Meetup',
+              data.title,
               style: GoogleFonts.poppins(
                 color: const Color(0xFF440687),
                 fontSize: 24,
@@ -455,12 +480,11 @@ class _MeetupCard extends StatelessWidget {
           Positioned(
             left: 22.7,
             top: 55.1,
-            width: 251,
+            right: 122,
             child: Text(
-              'Off-line exchange of learning experiences',
-              maxLines: 1,
-              overflow: TextOverflow.clip,
-              softWrap: false,
+              data.subtitle,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: GoogleFonts.poppins(
                 color: const Color(0xFF440687),
                 fontSize: 12,
@@ -468,33 +492,47 @@ class _MeetupCard extends StatelessWidget {
             ),
           ),
           Positioned(
-            left: 248.65,
-            top: 20,
-            child: SvgPicture.asset(
-              'assets/images/meetup_a.svg',
-              width: 51.114,
-              height: 51.115,
-            ),
+            right: 0,
+            top: 0,
+            bottom: 0,
+            width: 110,
+            child: NetImage(data.imageUrl),
           ),
-          Positioned(
-            left: 234.45,
-            top: 47.24,
-            child: SvgPicture.asset(
-              'assets/images/meetup_b.svg',
-              width: 35.313,
-              height: 42.088,
+        ],
+      ),
+    );
+  }
+}
+
+/// Clopoțelul de notificări (iconița din JSON) cu punct roșu dacă hasUnread.
+class _Bell extends StatelessWidget {
+  const _Bell({required this.iconUrl, required this.hasUnread});
+
+  final String iconUrl;
+  final bool hasUnread;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 32,
+      height: 44,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          NetImage(iconUrl, width: 28, height: 28),
+          if (hasUnread)
+            Positioned(
+              right: 4,
+              top: 10,
+              child: Container(
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFFF5106),
+                  shape: BoxShape.circle,
+                ),
+              ),
             ),
-          ),
-          Positioned(
-            left: 278.67,
-            top: 45.54,
-            child: Image.asset(
-              'assets/images/meetup_c.png',
-              width: 33.336,
-              height: 43.863,
-              fit: BoxFit.fill,
-            ),
-          ),
         ],
       ),
     );

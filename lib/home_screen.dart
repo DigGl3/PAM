@@ -16,7 +16,7 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DataView(
+    return DataView(c
       background: Colors.white,
       builder: (c) => _buildContent(context, c.home),
     );
@@ -504,7 +504,6 @@ class _MeetupCard extends StatelessWidget {
   }
 }
 
-/// Clopoțelul de notificări (iconița din JSON) cu punct roșu dacă hasUnread.
 class _Bell extends StatelessWidget {
   const _Bell({required this.iconUrl, required this.hasUnread});
 

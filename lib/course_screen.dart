@@ -26,7 +26,6 @@ class CourseScreen extends StatelessWidget {
     final course = page.course;
     final lessons = course.lessons;
     final selectedTab = c.selectedTab.value;
-    // Prima lecție deblocată și neterminată este evidențiată (buton plin)
     final current = lessons.indexWhere((l) => !l.locked && !l.completed);
     final extraLessons = lessons.length > 4 ? lessons.length - 4 : 0;
     final size = MediaQuery.sizeOf(context);

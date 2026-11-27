@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
-// GetX Library
 import 'package:get/get.dart';
 
-// Design, controller and Home screen
-import 'colors.dart';
-import 'controllers/app_controller.dart';
-import 'home_screen.dart';
+import 'core/di/app_binding.dart';
+import 'core/routes/app_pages.dart';
+import 'core/routes/app_routes.dart';
+import 'core/theme/app_colors.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,16 +26,15 @@ class LearningApp extends StatelessWidget {
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Learning',
-      // Controllerul care încarcă datele din JSON, disponibil în toată aplicația
-      initialBinding: BindingsBuilder(() {
-        Get.put(AppController(), permanent: true);
-      }),
+      // înregistrează ApiClient, DataSource, Repository și Use Case-urile
+      initialBinding: AppBinding(),
+      initialRoute: AppRoutes.home,
+      getPages: AppPages.pages,
       theme: ThemeData(
         scaffoldBackgroundColor: Colors.white,
         colorScheme: ColorScheme.fromSeed(seedColor: learningBlue),
         splashFactory: InkRipple.splashFactory,
       ),
-      home: const HomeScreen(),
     );
   }
 }
